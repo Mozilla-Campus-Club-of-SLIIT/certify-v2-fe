@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 interface Template {
   id: number;
@@ -68,8 +70,9 @@ export default function IssueCertificatePage() {
     const fetchTemplates = async () => {
       try {
         setTemplatesLoading(true);
+        const backendApi = process.env.NEXT_PUBLIC_BACKEND_API || "";
         const res = await fetch(
-          `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/templates`,
+          `${backendApi}/admin/templates`,
         );
         if (!res.ok) throw new Error("Could not load templates");
         const data = await res.json() as Template[] | { data: Template[] };
@@ -117,8 +120,9 @@ export default function IssueCertificatePage() {
         if (form[key].trim()) payload[key] = form[key].trim();
       });
 
+      const backendApi = process.env.NEXT_PUBLIC_BACKEND_API || "";
       const res = await fetch(
-        `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/add/certificate`,
+        `${backendApi}/admin/add/certificate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -184,7 +188,7 @@ export default function IssueCertificatePage() {
           <div className="flex gap-3 flex-col">
             <Link
               id="view-certificate-link"
-              to={`/certificates/${encodeURIComponent(issuedId)}`}
+              href={`/certificates/${encodeURIComponent(issuedId)}`}
               className="block py-3 rounded-xl text-white font-bold no-underline text-[0.9rem] bg-gradient-to-br from-[var(--color-moz-orange)] to-[var(--color-moz-orange-mid)] shadow-[0_4px_14px_rgba(255,113,57,0.3)]"
             >
               View Certificate →

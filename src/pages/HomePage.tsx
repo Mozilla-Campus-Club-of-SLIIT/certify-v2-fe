@@ -1,14 +1,16 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 function HomePage() {
   const [certificateId, setCertificateId] = useState("");
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleVerifyClick = () => {
     const trimmedId = certificateId.trim();
     if (!trimmedId) return;
-    navigate(`/certificates/${encodeURIComponent(trimmedId)}`);
+    router.push(`/certificates/${encodeURIComponent(trimmedId)}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
