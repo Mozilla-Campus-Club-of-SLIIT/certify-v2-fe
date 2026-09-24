@@ -16,6 +16,8 @@ interface FormData {
   issue_reason: string;
   event_name: string;
   event_date: string;
+  event_location: string;
+  course_name: string;
   issuer_name: string;
   notes: string;
 }
@@ -27,6 +29,8 @@ const EMPTY_FORM: FormData = {
   issue_reason: "",
   event_name: "",
   event_date: "",
+  event_location: "",
+  course_name: "",
   issuer_name: "",
   notes: "",
 };
@@ -122,6 +126,8 @@ export default function IssueCertificatePage() {
           "issue_reason",
           "event_name",
           "event_date",
+          "event_location",
+          "course_name",
           "issuer_name",
           "notes",
         ] as const
@@ -348,6 +354,28 @@ export default function IssueCertificatePage() {
                 type="date"
                 value={form.event_date}
                 onChange={set("event_date")}
+                className={inputTailwind}
+              />
+            </Field>
+
+            <Field label="Event Location">
+              <input
+                id="event-location-input"
+                type="text"
+                placeholder="Location"
+                value={form.event_location}
+                onChange={set("event_location")}
+                className={inputTailwind}
+              />
+            </Field>
+
+            <Field label="Course Name">
+              <input
+                id="course-name-input"
+                type="text"
+                placeholder="Course"
+                value={form.course_name}
+                onChange={set("course_name")}
                 className={inputTailwind}
               />
             </Field>
