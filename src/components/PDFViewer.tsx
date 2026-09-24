@@ -61,9 +61,7 @@ function PDFViewer({ url }: Readonly<{ url: string }>) {
           }
           className="flex items-center justify-center"
         >
-          <div
-            className="rounded-2xl overflow-hidden border border-moz-gray-light bg-white p-2 shadow-[0_4px_6px_rgba(0,0,0,0.04),0_12px_40px_rgba(89,42,203,0.06)]"
-          >
+          <div className="bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             <Page
               pageNumber={1}
               scale={scale}

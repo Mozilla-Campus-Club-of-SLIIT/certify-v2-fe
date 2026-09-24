@@ -2,411 +2,405 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import authFetch from "../../lib/authFetch";
 
-interface BadgeTemplate {
-    id: number;
-    template_name: string;
-    template_for?: string;
-    event_name?: string;
+interface Template {
+  id: number;
+  template_name: string;
+  template_for?: string;
+  event_name?: string;
 }
 
 interface FormData {
-    template_id: string;
-    recipient_name: string;
-    recipient_email: string;
-    issue_reason: string;
-    event_name: string;
-    event_date: string;
-    event_location: string;
-    issuer_name: string;
-    course_name: string;
-    notes: string;
+  template_id: string;
+  recipient_name: string;
+  recipient_email: string;
+  issue_reason: string;
+  event_name: string;
+  event_date: string;
+  issuer_name: string;
+  notes: string;
 }
 
 const EMPTY_FORM: FormData = {
-    template_id: "",
-    recipient_name: "",
-    recipient_email: "",
-    issue_reason: "",
-    event_name: "",
-    event_date: "",
-    event_location: "",
-    issuer_name: "",
-    course_name: "",
-    notes: "",
+  template_id: "",
+  recipient_name: "",
+  recipient_email: "",
+  issue_reason: "",
+  event_name: "",
+  event_date: "",
+  issuer_name: "",
+  notes: "",
 };
 
 function Field({
-    label,
-    required,
-    children,
+  label,
+  required,
+  children,
 }: Readonly<{ label: string; required?: boolean; children: React.ReactNode }>) {
-    return (
-        <div className="flex flex-col gap-[0.375rem]">
-            <label className="form-label">
-                {label}
-                {required && (
-                    <span className="text-moz-orange ml-[0.2rem]">*</span>
-                )}
-            </label>
-            {children}
-        </div>
-    );
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="font-['Poppins',system-ui,sans-serif] font-medium text-[12px] tracking-[0.02em] text-[#1E1E1E]">
+        {label}
+        {required && <span className="text-[#E53935]">*</span>}
+      </label>
+      {children}
+    </div>
+  );
 }
 
+const inputTailwind =
+  "w-full h-[34px] bg-[#F5F5F5] rounded-[6px] border-none px-3 font-['Poppins',system-ui,sans-serif] text-[12px] outline-none text-[#1E1E1E] placeholder:text-[#A6A6A6] focus:ring-2 focus:ring-[#F47624] transition-all";
+
 export default function IssueBadgePage() {
-    const [form, setForm] = useState<FormData>(EMPTY_FORM);
-    const [templates, setTemplates] = useState<BadgeTemplate[]>([]);
-    const [templatesLoading, setTemplatesLoading] = useState(true);
-    const [templatesError, setTemplatesError] = useState("");
+  const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [templatesError, setTemplatesError] = useState("");
 
-    const [submitting, setSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState("");
-    const [issuedId, setIssuedId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [issuedId, setIssuedId] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchTemplates = async () => {
-            try {
-                setTemplatesLoading(true);
-                const res = await authFetch(
-                    `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/badge-templates`,
-                );
-                if (!res.ok) throw new Error("Could not load badge templates");
-                const data = await res.json() as { badge_templates: BadgeTemplate[] };
-                const list = data.badge_templates ?? [];
-                setTemplates(list);
-            } catch {
-                setTemplatesError("Could not load template list - please enter template ID manually.");
-            } finally {
-                setTemplatesLoading(false);
-            }
-        };
-        fetchTemplates();
-    }, []);
-
-    const set = (field: keyof FormData) =>
-        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-            setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!form.template_id || !form.recipient_name || !form.recipient_email) return;
-
-        try {
-            setSubmitting(true);
-            setSubmitError("");
-            setIssuedId(null);
-
-            const payload: Record<string, unknown> = {
-                template_id: Number(form.template_id),
-                recipient_name: form.recipient_name.trim(),
-                recipient_email: form.recipient_email.trim(),
-            };
-
-            (
-                [
-                    "issue_reason",
-                    "event_name",
-                    "event_date",
-                    "event_location",
-                    "issuer_name",
-                    "course_name",
-                    "notes",
-                ] as const
-            ).forEach((key) => {
-                if (form[key].trim()) payload[key] = form[key].trim();
-            });
-
-            const res = await authFetch(
-                `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/add/badge`,
-                {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                },
-            );
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({})) as { detail?: string; message?: string };
-                throw new Error(err.detail ?? err.message ?? `Server error ${res.status}`);
-            }
-
-            const result = await res.json() as { badge?: { badge_id?: string; id?: number } };
-
-            const bId = result.badge?.badge_id ?? (result.badge?.id ? String(result.badge.id) : null);
-
-            if (!bId) throw new Error("No badge ID returned by the server.");
-
-            setIssuedId(bId);
-            setForm(EMPTY_FORM);
-        } catch (err) {
-            setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    /*  Success screen  */
-    if (issuedId) {
-        return (
-            <div
-                className="flex items-center justify-center bg-[#f7f7fa] px-6 py-8 min-h-[calc(100vh-140px)]"
-            >
-                <div
-                    className="bg-white border border-moz-gray-light rounded-[1.25rem] p-10 max-w-[30rem] w-full text-center shadow-[0_4px_6px_rgba(0,0,0,0.04),0_12px_40px_rgba(89,42,203,0.06)]"
-                >
-                    {/* Checkmark */}
-                    <div
-                        className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl bg-[rgba(255,113,57,0.1)]"
-                    >
-                        ✓
-                    </div>
-
-                    <h2 className="m-0 mb-2 text-xl font-bold text-moz-black">
-                        Badge Issued!
-                    </h2>
-                    <p className="text-moz-gray-mid text-sm mb-6">
-                        The badge has been created successfully.
-                    </p>
-
-                    {/* ID chip */}
-                    <div className="bg-[#f7f7fa] border border-moz-gray-light rounded-lg py-3 px-4 mb-6">
-                        <p className="m-0 text-[0.72rem] text-moz-gray-mid font-semibold uppercase tracking-[0.06em]">
-                            Badge ID
-                        </p>
-                        <p className="mt-1 font-mono text-base font-bold text-moz-black break-all">
-                            {issuedId}
-                        </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-3 flex-col">
-                        <Link
-                            id="view-badge-link"
-                            to={`/badges/verify`}
-                            state={{ badgeId: issuedId }}
-                            className="block py-3 rounded-xl text-white font-bold no-underline text-[0.9rem] bg-gradient-to-br from-[var(--color-moz-orange)] to-[var(--color-moz-orange-mid)] shadow-[0_4px_14px_rgba(255,113,57,0.3)]"
-                        >
-                            Verify Badge →
-                        </Link>
-                        <button
-                            id="issue-another-badge-button"
-                            onClick={() => setIssuedId(null)}
-                            className="py-3 rounded-xl border-[1.5px] border-moz-gray-light bg-transparent text-moz-gray-mid font-semibold cursor-pointer text-[0.9rem] font-sans"
-                        >
-                            Issue Another
-                        </button>
-                    </div>
-                </div>
-            </div>
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setTemplatesLoading(true);
+        const res = await authFetch(
+          `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/badge-templates`,
         );
+        if (!res.ok) throw new Error("Could not load badge templates");
+        const data = (await res.json()) as { badge_templates?: Template[] };
+        const list = data.badge_templates ?? [];
+        setTemplates(list);
+      } catch {
+        setTemplatesError(
+          "Could not load badge templates - enter template ID manually.",
+        );
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const set =
+    (field: keyof FormData) =>
+      (
+        e: React.ChangeEvent<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >,
+      ) =>
+        setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !form.template_id ||
+      !form.recipient_name ||
+      !form.recipient_email ||
+      !form.issue_reason.trim() ||
+      !form.issuer_name.trim()
+    )
+      return;
+
+    try {
+      setSubmitting(true);
+      setSubmitError("");
+      setIssuedId(null);
+
+      const payload: Record<string, unknown> = {
+        template_id: Number(form.template_id),
+        recipient_name: form.recipient_name.trim(),
+        recipient_email: form.recipient_email.trim(),
+      };
+
+      (
+        [
+          "issue_reason",
+          "event_name",
+          "event_date",
+          "issuer_name",
+          "notes",
+        ] as const
+      ).forEach((key) => {
+        if (form[key].trim()) payload[key] = form[key].trim();
+      });
+
+      const res = await authFetch(
+        `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/add/badge`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as {
+          detail?: string;
+          message?: string;
+        };
+        throw new Error(err.detail ?? err.message ?? `Server error ${res.status}`);
+      }
+
+      const result = (await res.json()) as {
+        badge?: { badge_id?: string; id?: number };
+      };
+      const badgeId =
+        result.badge?.badge_id ??
+        (result.badge?.id ? String(result.badge.id) : null);
+
+      if (!badgeId) throw new Error("No badge ID returned by the server.");
+
+      setIssuedId(badgeId);
+      setForm(EMPTY_FORM);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    const isDisabled = submitting || !form.template_id || !form.recipient_name || !form.recipient_email;
-
+  /*  Success screen  */
+  if (issuedId) {
     return (
-        <div
-            className="scrollbar-hidden overflow-y-auto bg-[#f7f7fa] px-6 py-8 h-[calc(100vh-140px)]"
-        >
-            <div className="max-w-3xl mx-auto">
-                {/* Page header */}
-                <div className="mb-7">
-                    <h1
-                        className="m-0 font-extrabold text-moz-black tracking-[-0.02em] text-[clamp(1.3rem,3vw,1.75rem)]"
-                    >
-                        Issue Badge
-                    </h1>
-                    <p className="mt-[0.375rem] text-sm text-moz-gray-mid">
-                        Fill in the details below to issue a new badge to a recipient.
-                    </p>
-                </div>
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] px-4.5 py-9">
+        <div className="bg-white border border-[#E8E8E8] rounded-[16px] p-7.5 max-w-[22.5rem] w-full text-center shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
+          {/* Checkmark */}
+          <div className="w-10.5 h-10.5 rounded-full flex items-center justify-center mx-auto mb-3.75 text-2xl bg-[rgba(244,118,36,0.1)] text-[#F47624]">
+            ✓
+          </div>
 
-                <form
-                    id="issue-badge-form"
-                    onSubmit={handleSubmit}
-                    noValidate
-                    className="flex flex-col gap-6"
-                >
-                    {/* Section: Template */}
-                    <section className="bg-white border border-moz-gray-light rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <h2 className="m-0 mb-4 text-sm font-bold text-moz-black uppercase tracking-[0.06em]">Badge Template</h2>
+          <h2 className="m-0 mb-1.5 text-xl font-bold font-['Poppins',system-ui,sans-serif] text-black">
+            Badge Issued!
+          </h2>
+          <p className="text-[#6D6D6D] font-['Poppins',system-ui,sans-serif] text-sm mb-4.5">
+            The badge has been created successfully.
+          </p>
 
-                        <Field label="Template" required>
-                            {templatesLoading ? (
-                                <div className="input-base text-moz-gray-mid flex items-center">
-                                    Loading templates…
-                                </div>
-                            ) : templates.length > 0 ? (
-                                <select
-                                    id="template-select"
-                                    required
-                                    value={form.template_id}
-                                    onChange={set("template_id")}
-                                    className="input-base appearance-none cursor-pointer"
-                                >
-                                    <option value="">Select a template…</option>
-                                    {templates.map((t) => (
-                                        <option key={t.id} value={t.id}>
-                                            {t.template_name}
-                                            {t.template_for ? ` — ${t.template_for}` : ""}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <>
-                                    {templatesError && (
-                                        <p className="m-0 mb-2 text-[0.78rem] text-[#c0392b]">
-                                            ⚠ {templatesError}
-                                        </p>
-                                    )}
-                                    <input
-                                        id="template-id-input"
-                                        type="number"
-                                        min="1"
-                                        required
-                                        placeholder="Enter template ID"
-                                        value={form.template_id}
-                                        onChange={set("template_id")}
-                                        className="input-base"
-                                    />
-                                </>
-                            )}
-                        </Field>
-                    </section>
+          {/* ID chip */}
+          <div className="bg-[#F7F7F7] rounded-[8px] py-2.25 px-3 mb-4.5">
+            <p className="m-0 text-[12px] text-[#1E1E1E] font-medium font-['Poppins',system-ui,sans-serif] uppercase tracking-[0.06em]">
+              Badge ID
+            </p>
+            <p className="mt-0.75 font-mono text-base font-bold text-black break-all">
+              {issuedId}
+            </p>
+          </div>
 
-                    {/* Section: Recipient */}
-                    <section className="bg-white border border-moz-gray-light rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <h2 className="m-0 mb-4 text-sm font-bold text-moz-black uppercase tracking-[0.06em]">Recipient</h2>
-                        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
-                            <Field label="Full Name" required>
-                                <input
-                                    id="recipient-name-input"
-                                    type="text"
-                                    required
-                                    placeholder="John Doe"
-                                    value={form.recipient_name}
-                                    onChange={set("recipient_name")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Email" required>
-                                <input
-                                    id="recipient-email-input"
-                                    type="email"
-                                    required
-                                    placeholder="john@example.com"
-                                    value={form.recipient_email}
-                                    onChange={set("recipient_email")}
-                                    className="input-base"
-                                />
-                            </Field>
-                        </div>
-                    </section>
-
-                    {/* Section: Event Details */}
-                    <section className="bg-white border border-moz-gray-light rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <h2 className="m-0 mb-1 text-sm font-bold text-moz-black uppercase tracking-[0.06em]">Extracurricular Details</h2>
-                        <p className="mb-4 text-[0.78rem] text-moz-gray-mid">
-                            All fields in this section are optional.
-                        </p>
-                        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
-                            <Field label="Issue Reason">
-                                <input
-                                    id="issue-reason-input"
-                                    type="text"
-                                    placeholder="e.g. hackathon winner"
-                                    value={form.issue_reason}
-                                    onChange={set("issue_reason")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Event Name">
-                                <input
-                                    id="event-name-input"
-                                    type="text"
-                                    placeholder="e.g. AI Workshop 2026"
-                                    value={form.event_name}
-                                    onChange={set("event_name")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Event Date">
-                                <input
-                                    id="event-date-input"
-                                    type="date"
-                                    value={form.event_date}
-                                    onChange={set("event_date")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Event Location">
-                                <input
-                                    id="event-location-input"
-                                    type="text"
-                                    placeholder="e.g. Colombo"
-                                    value={form.event_location}
-                                    onChange={set("event_location")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Issuer Name">
-                                <input
-                                    id="issuer-name-input"
-                                    type="text"
-                                    placeholder="e.g. SLIIT Mozilla Club"
-                                    value={form.issuer_name}
-                                    onChange={set("issuer_name")}
-                                    className="input-base"
-                                />
-                            </Field>
-                            <Field label="Course Name">
-                                <input
-                                    id="course-name-input"
-                                    type="text"
-                                    placeholder="e.g. Prompt Engineering"
-                                    value={form.course_name}
-                                    onChange={set("course_name")}
-                                    className="input-base"
-                                />
-                            </Field>
-                        </div>
-
-                        <div className="mt-4">
-                            <Field label="Notes">
-                                <textarea
-                                    id="notes-input"
-                                    placeholder="Any additional notes…"
-                                    rows={3}
-                                    value={form.notes}
-                                    onChange={set("notes")}
-                                    className="input-base textarea-input min-h-[5rem]"
-                                />
-                            </Field>
-                        </div>
-                    </section>
-
-                    {/* Submit error */}
-                    {submitError && (
-                        <div className="form-banner form-banner-error">
-                            <span>⚠</span>
-                            <span>{submitError}</span>
-                        </div>
-                    )}
-
-                    {/* Submit */}
-                    <div className="flex justify-end pb-8">
-                        <button
-                            id="submit-badge-button"
-                            type="submit"
-                            disabled={isDisabled}
-                            className={`py-3 px-8 rounded-xl border-none text-[0.95rem] font-bold font-sans transition-all duration-200 ${isDisabled
-                                ? "bg-moz-gray-light text-moz-gray cursor-not-allowed"
-                                : "text-white cursor-pointer bg-gradient-to-br from-[var(--color-moz-orange)] to-[var(--color-moz-orange-mid)] shadow-[0_4px_14px_rgba(255,113,57,0.35)]"
-                                }`}
-                        >
-                            {submitting ? "Issuing…" : "Issue Badge →"}
-                        </button>
-                    </div>
-                </form>
-            </div>
+          {/* Actions */}
+          <div className="flex gap-2.25 flex-col">
+            <Link
+              id="view-badge-link"
+              to="/badges/verify"
+              state={{ badgeId: issuedId }}
+              className="block py-2.25 rounded-lg text-white font-bold no-underline text-[13px] bg-[#F47624] font-['Poppins',system-ui,sans-serif] shadow-[0_4px_14px_rgba(244,118,36,0.2)]"
+            >
+              Verify Badge →
+            </Link>
+            <button
+              id="issue-another-badge-button"
+              onClick={() => setIssuedId(null)}
+              className="py-2.25 rounded-lg border-none bg-transparent text-[#0F172A] font-semibold cursor-pointer text-[13px] font-['Poppins',system-ui,sans-serif]"
+            >
+              Issue Another
+            </button>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  const isDisabled =
+    submitting ||
+    !form.template_id ||
+    !form.recipient_name ||
+    !form.recipient_email ||
+    !form.issue_reason.trim() ||
+    !form.issuer_name.trim();
+
+  return (
+    <div className="flex-1 bg-[#FAFAFA] px-3 py-7.5 sm:py-[42px] flex flex-col items-center">
+      {/* Page header */}
+      <h1 className="m-0 mb-6 sm:mb-[38px] font-['Poppins',system-ui,sans-serif] font-semibold text-[24px] sm:text-[38px] leading-[1.2] text-black text-center">
+        Issue Badge
+      </h1>
+
+      {/* Main card */}
+      <div className="bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded-[15px] w-full max-w-[526px] px-4.5 py-6 sm:px-[38px] sm:pt-[30px] sm:pb-[15px] mb-6">
+        <h2 className="m-0 mb-4.5 font-['Poppins',system-ui,sans-serif] font-semibold text-[18px] text-[#0F172A]">
+          Badge Details
+        </h2>
+
+        <form
+          id="issue-badge-form"
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex flex-col gap-3.75"
+        >
+          {/* Template */}
+          <Field label="Template" required>
+            {templatesLoading ? (
+              <div className={`${inputTailwind} flex items-center text-[#1E1E1E]/40`}>
+                Loading templates…
+              </div>
+            ) : templates.length > 0 ? (
+              <select
+                id="template-select"
+                required
+                value={form.template_id}
+                onChange={set("template_id")}
+                className={`${inputTailwind} appearance-none cursor-pointer pr-7.5`}
+                style={{
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.41 0.589966L6 5.16997L10.59 0.589966L12 1.99997L6 7.99997L0 1.99997L1.41 0.589966Z' fill='%231E1E1E' opacity='0.4'/%3E%3C/svg%3E\")",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "calc(100% - 1rem) center",
+                }}
+              >
+                <option value="" disabled hidden>Enter template ID</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id} className="text-black">
+                    {t.template_name}
+                    {t.template_for ? ` — ${t.template_for}` : ""}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <>
+                {templatesError && (
+                  <p className="m-0 mb-1.5 text-[12px] text-[#c0392b]">
+                    ⚠ {templatesError}
+                  </p>
+                )}
+                <input
+                  id="template-id-input"
+                  type="number"
+                  min="1"
+                  required
+                  placeholder="Enter template ID"
+                  value={form.template_id}
+                  onChange={set("template_id")}
+                  className={inputTailwind}
+                />
+              </>
+            )}
+          </Field>
+
+          {/* Full Name & Email */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-7.5 gap-y-3.75">
+            <Field label="Full name" required>
+              <input
+                id="recipient-name-input"
+                type="text"
+                required
+                placeholder="Name"
+                value={form.recipient_name}
+                onChange={set("recipient_name")}
+                className={inputTailwind}
+              />
+            </Field>
+            <Field label="Email" required>
+              <input
+                id="recipient-email-input"
+                type="email"
+                required
+                placeholder="Email"
+                value={form.recipient_email}
+                onChange={set("recipient_email")}
+                className={inputTailwind}
+              />
+            </Field>
+          </div>
+
+          <Field label="Issue Reason" required>
+            <input
+              id="issue-reason-input"
+              type="text"
+              required
+              placeholder="Reason"
+              value={form.issue_reason}
+              onChange={set("issue_reason")}
+              className={inputTailwind}
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-7.5 gap-y-3.75">
+            <Field label="Event Name">
+              <input
+                id="event-name-input"
+                type="text"
+                placeholder="Event"
+                value={form.event_name}
+                onChange={set("event_name")}
+                className={inputTailwind}
+              />
+            </Field>
+
+            <Field label="Event Date">
+              <input
+                id="event-date-input"
+                type="date"
+                value={form.event_date}
+                onChange={set("event_date")}
+                className={inputTailwind}
+              />
+            </Field>
+
+            <Field label="Issuer Name" required>
+              <input
+                id="issuer-name-input"
+                type="text"
+                required
+                placeholder="Name"
+                value={form.issuer_name}
+                onChange={set("issuer_name")}
+                className={inputTailwind}
+              />
+            </Field>
+          </div>
+
+          <Field label="Notes">
+            <textarea
+              id="notes-input"
+              rows={4}
+              value={form.notes}
+              onChange={set("notes")}
+              className={`${inputTailwind} h-auto py-2.25 resize-y min-h-[72px]`}
+            />
+          </Field>
+
+          {/* Submit error */}
+          {submitError && (
+            <div className="bg-[#fdf0ef] border border-[#f5c6c2] text-[#c0392b] px-3 py-2.25 rounded-lg text-sm flex gap-1.5 items-center">
+              <span>⚠</span>
+              <span>{submitError}</span>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4.5 sm:gap-[46px] mt-1.5">
+            <button
+              type="button"
+              onClick={() => setForm(EMPTY_FORM)}
+              disabled={submitting}
+              className="font-['Poppins',system-ui,sans-serif] font-semibold text-[14px] sm:text-[15px] text-[#0F172A] bg-transparent border-none cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              id="submit-badge-button"
+              type="submit"
+              disabled={isDisabled}
+              className={`w-full sm:w-auto font-['Poppins',system-ui,sans-serif] font-normal text-[14px] sm:text-[15px] px-6 py-1.5 sm:py-[8px] rounded-[4px] border-none transition-all duration-200 ${isDisabled
+                ? "bg-[#D9D9D9] text-[#8C8C8C] cursor-not-allowed"
+                : "bg-[#F47624] text-white cursor-pointer hover:bg-[#E36614] active:scale-[0.98] shadow-[0_2px_10px_rgba(244,118,36,0.3)]"
+                }`}
+            >
+              {submitting ? "Issuing…" : "Issue Badge"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }

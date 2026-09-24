@@ -9,10 +9,10 @@ function Field({
   children,
 }: Readonly<{ label: string; required?: boolean; children: React.ReactNode }>) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="font-['Poppins',system-ui,sans-serif] font-bold text-[14px] tracking-[0.03em] text-[#1E1E1E]">
+    <div className="flex flex-col gap-1.5">
+      <label className="font-['Poppins',system-ui,sans-serif] font-medium text-[12px] tracking-[0.02em] text-[#1E1E1E]">
         {label}
-        {required && <span className="text-[#F47624] ml-1">*</span>}
+        {required && <span className="text-[#E53935]">*</span>}
       </label>
       {children}
     </div>
@@ -20,12 +20,12 @@ function Field({
 }
 
 const inputTailwind =
-  "w-full bg-[#F7F7F7] rounded-[10px] border-none px-5 py-3 font-['Poppins',system-ui,sans-serif] text-[15px] outline-none text-[#1E1E1E] placeholder:text-[#1E1E1E]/40 focus:ring-2 focus:ring-[#F47624] transition-all";
+  "w-full h-[34px] bg-[#F5F5F5] rounded-[6px] border-none px-3 font-['Poppins',system-ui,sans-serif] text-[12px] outline-none text-[#1E1E1E] placeholder:text-[#A6A6A6] focus:ring-2 focus:ring-[#F47624] transition-all";
 
 export default function TemplateUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [fontSize, setFontSize] = useState("");
-  const [fontColor, setFontColor] = useState("#161616");
+  const [fontColor, setFontColor] = useState("#F47624");
   const [nameXPos, setNameXPos] = useState("");
   const [nameYPos, setNameYPos] = useState("");
   const [templateName, setTemplateName] = useState("");
@@ -45,7 +45,7 @@ export default function TemplateUploadPage() {
   const resetForm = () => {
     setFile(null);
     setFontSize("");
-    setFontColor("#161616");
+    setFontColor("#F47624");
     setNameXPos("");
     setNameYPos("");
     setTemplateName("");
@@ -102,27 +102,27 @@ export default function TemplateUploadPage() {
      Original behavior showed a banner. Let's redirect to success screen layout similar to the Issue page. */
   if (success) {
     return (
-      <div className="flex items-center justify-center bg-[rgba(236,234,231,0.19)] px-6 py-8 min-h-[calc(100vh-72px)]">
-        <div className="bg-white border border-[#E8E8E8] rounded-[22px] p-10 max-w-[30rem] w-full text-center shadow-[0px_3px_9px_rgba(0,0,0,0.25)]">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl bg-[rgba(244,118,36,0.1)] text-[#F47624]">
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] px-4.5 py-9">
+        <div className="bg-white border border-[#E8E8E8] rounded-[16px] p-7.5 max-w-[22.5rem] w-full text-center shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
+          <div className="w-10.5 h-10.5 rounded-full flex items-center justify-center mx-auto mb-3.75 text-2xl bg-[rgba(244,118,36,0.1)] text-[#F47624]">
             ✓
           </div>
-          <h2 className="m-0 mb-2 text-xl font-bold font-['Poppins',system-ui,sans-serif] text-black">
+          <h2 className="m-0 mb-1.5 text-xl font-bold font-['Poppins',system-ui,sans-serif] text-black">
             Template Uploaded!
           </h2>
-          <p className="text-[#6D6D6D] font-['Poppins',system-ui,sans-serif] text-sm mb-6">
+          <p className="text-[#6D6D6D] font-['Poppins',system-ui,sans-serif] text-sm mb-4.5">
             The certificate template has been processed and saved successfully.
           </p>
-          <div className="flex gap-3 flex-col">
+          <div className="flex gap-2.25 flex-col">
             <button
               onClick={() => setSuccess(false)}
-              className="py-3 rounded-lg border-[1.5px] border-[#F47624] bg-transparent text-[#F47624] font-semibold cursor-pointer text-[0.9rem] font-['Poppins',system-ui,sans-serif]"
+              className="py-2.25 rounded-lg border-[1.5px] border-[#F47624] bg-transparent text-[#F47624] font-semibold cursor-pointer text-[13px] font-['Poppins',system-ui,sans-serif]"
             >
               Upload Another Template
             </button>
             <Link
               to="/"
-              className="block py-3 rounded-lg border-none bg-transparent text-[#0F172A] font-semibold text-[0.9rem] font-['Poppins',system-ui,sans-serif] no-underline hover:opacity-75"
+              className="block py-2.25 rounded-lg border-none bg-transparent text-[#0F172A] font-semibold text-[13px] font-['Poppins',system-ui,sans-serif] no-underline hover:opacity-75"
             >
               Back to Dashboard
             </Link>
@@ -136,15 +136,15 @@ export default function TemplateUploadPage() {
     submitting || !file || !fontSize || !fontColor || !nameXPos || !nameYPos;
 
   return (
-    <div className="h-[calc(100vh-72px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-[rgba(236,234,231,0.19)] px-4 py-12 flex flex-col items-center flex-1">
+    <div className="flex-1 bg-[#FAFAFA] px-3 py-7.5 sm:py-[42px] flex flex-col items-center">
       {/* Page header */}
-      <h1 className="m-0 mb-8 font-['Poppins',system-ui,sans-serif] font-semibold text-[32px] sm:text-[50px] leading-[1.25] text-black text-center">
+      <h1 className="m-0 mb-6 sm:mb-[38px] font-['Poppins',system-ui,sans-serif] font-semibold text-[24px] sm:text-[38px] leading-[1.2] text-black text-center">
         New Certificate Template
       </h1>
 
       {/* Main card */}
-      <div className="bg-white shadow-[0px_3px_9px_rgba(0,0,0,0.25)] rounded-[22px] w-full max-w-[750px] p-6 sm:p-10 mb-8">
-        <h2 className="m-0 mb-8 font-['Poppins',system-ui,sans-serif] font-semibold text-[24px] text-[#0F172A]">
+      <div className="bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded-[15px] w-full max-w-[526px] px-4.5 py-6 sm:px-[38px] sm:pt-[30px] sm:pb-[15px] mb-6">
+        <h2 className="m-0 mb-4.5 font-['Poppins',system-ui,sans-serif] font-semibold text-[18px] text-[#0F172A]">
           Template Details
         </h2>
 
@@ -152,16 +152,16 @@ export default function TemplateUploadPage() {
           id="upload-template-form"
           onSubmit={handleSubmit}
           noValidate
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-3.75"
         >
           {/* File upload */}
           <Field label="Template File" required>
             <label
               htmlFor="template-file-input"
-              className="cursor-pointer border-none bg-[#F7F7F7] rounded-[10px] w-full flex flex-col items-center justify-center p-8 transition-colors hover:bg-[#EBEBEB]"
+              className="cursor-pointer bg-[#F5F5F5] rounded-[6px] w-full h-[75px] flex flex-col items-center justify-center gap-1.5 px-3 transition-colors hover:bg-[#EDEDED]"
             >
-              <Upload className="mb-2 text-[#060401] opacity-40 shrink-0" size={24} />
-              <p className="m-0 text-[16px] font-bold font-['Poppins',system-ui,sans-serif] text-center tracking-[0.03em] text-[#060401] opacity-40 overflow-hidden text-ellipsis whitespace-nowrap w-full">
+              <Upload className="text-[#1E1E1E] opacity-70 shrink-0" size={17} />
+              <p className="m-0 text-[12px] font-medium font-['Poppins',system-ui,sans-serif] text-center tracking-[0.02em] text-[#1E1E1E] opacity-40 overflow-hidden text-ellipsis whitespace-nowrap w-full">
                 {file ? file.name : "Click to choose a PDF or image"}
               </p>
               <input
@@ -175,13 +175,13 @@ export default function TemplateUploadPage() {
           </Field>
 
           {/* First grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-7.5 gap-y-3.75">
             <Field label="Font Size" required>
               <input
                 id="font-size-input"
                 type="number"
                 required
-                placeholder="Name"
+                placeholder="e.g. 55"
                 value={fontSize}
                 onChange={(e) => setFontSize(e.target.value)}
                 className={inputTailwind}
@@ -189,15 +189,20 @@ export default function TemplateUploadPage() {
             </Field>
 
             <Field label="Font Color" required>
-              <div className="flex gap-2 w-full max-h-[48px]">
-                <input
-                  id="font-color-picker"
-                  type="color"
-                  value={fontColor}
-                  onChange={(e) => setFontColor(e.target.value)}
-                  className="h-[48px] w-[54px] rounded-[5px] border-none p-0 cursor-pointer overflow-hidden shrink-0 bg-[#F7F7F7]"
-                  style={{ padding: 0 }}
-                />
+              <div className="flex w-full h-[34px] rounded-[6px] overflow-hidden bg-[#F5F5F5] focus-within:ring-2 focus-within:ring-[#F47624] transition-all">
+                <label
+                  className="relative w-[33px] shrink-0 cursor-pointer"
+                  style={{ backgroundColor: fontColor }}
+                  title="Pick a colour"
+                >
+                  <input
+                    id="font-color-picker"
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(fontColor) ? fontColor : "#000000"}
+                    onChange={(e) => setFontColor(e.target.value.toUpperCase())}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </label>
                 <input
                   id="font-color-input"
                   type="text"
@@ -205,7 +210,7 @@ export default function TemplateUploadPage() {
                   placeholder="#F47624"
                   value={fontColor}
                   onChange={(e) => setFontColor(e.target.value)}
-                  className={inputTailwind}
+                  className={`${inputTailwind} rounded-none focus:ring-0`}
                 />
               </div>
             </Field>
@@ -257,6 +262,7 @@ export default function TemplateUploadPage() {
               <input
                 id="event-name-input"
                 type="text"
+                placeholder="Name"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
                 className={inputTailwind}
@@ -277,28 +283,28 @@ export default function TemplateUploadPage() {
           <Field label="Notes">
             <textarea
               id="notes-input"
-              rows={3}
+              rows={4}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className={`${inputTailwind} resize-y min-h-[5rem]`}
+              className={`${inputTailwind} h-auto py-2.25 resize-y min-h-[75px]`}
             />
           </Field>
 
           {/* Submit error */}
           {error && (
-            <div className="bg-[#fdf0ef] border border-[#f5c6c2] text-[#c0392b] px-4 py-3 rounded-lg text-sm flex gap-2 items-center">
+            <div className="bg-[#fdf0ef] border border-[#f5c6c2] text-[#c0392b] px-3 py-2.25 rounded-lg text-sm flex gap-1.5 items-center">
               <span>⚠</span>
               <span>{error}</span>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-6 mt-6">
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4.5 sm:gap-[46px] mt-1.5">
             <button
               type="button"
               onClick={resetForm}
               disabled={submitting}
-              className="font-['Poppins',system-ui,sans-serif] font-semibold text-[18px] sm:text-[20px] text-[#0F172A] bg-transparent border-none cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50"
+              className="font-['Poppins',system-ui,sans-serif] font-semibold text-[14px] sm:text-[15px] text-[#0F172A] bg-transparent border-none cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -306,7 +312,7 @@ export default function TemplateUploadPage() {
               id="submit-template-button"
               type="submit"
               disabled={isDisabled}
-              className={`w-full sm:w-auto font-['Poppins',system-ui,sans-serif] font-normal text-[18px] sm:text-[20px] px-8 py-2 sm:py-[10px] rounded-[5px] border-none transition-all duration-200 ${isDisabled
+              className={`w-full sm:w-auto font-['Poppins',system-ui,sans-serif] font-normal text-[14px] sm:text-[15px] px-6 py-1.5 sm:py-[8px] rounded-[4px] border-none transition-all duration-200 ${isDisabled
                 ? "bg-[#D9D9D9] text-[#8C8C8C] cursor-not-allowed"
                 : "bg-[#F47624] text-white cursor-pointer hover:bg-[#E36614] active:scale-[0.98] shadow-[0_2px_10px_rgba(244,118,36,0.3)]"
                 }`}
