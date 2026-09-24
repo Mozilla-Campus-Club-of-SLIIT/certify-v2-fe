@@ -1,28 +1,20 @@
 /**
- * authFetch – a thin wrapper around fetch() that automatically attaches
- * the `Authorization: Bearer <token>` header using the JWT stored in
- * accounts.sliitmozilla.org's localStorage (key: "token").
+ * authFetch – a thin wrapper around fetch() that attaches the
+ * `Authorization: Bearer <token>` header using the JWT obtained from
+ * accounts.sliitmozilla.org at sign-in (localStorage key: "certify_token").
  *
- * Because the accounts site and certify share the sliitmozilla.org domain,
- * the token is accessible via localStorage if the apps share origin. In
- * cross-origin cases (e.g. localhost dev), falls back to null (no token sent).
+ * If the backend rejects the token (401), the token is dropped so the UI
+ * falls back to the signed-out state instead of retrying a dead session.
+ * See ./auth.ts for storage and the SSO calls.
  *
  * Usage:
  *   import authFetch from "@/lib/authFetch";
  *   const res = await authFetch("/admin/add/badge", { method: "POST", body: ... });
  */
 
-const TOKEN_KEY = "certify_token";
+import { clearToken, getToken } from "./auth";
 
-function getToken(): string | null {
-    try {
-        return localStorage.getItem(TOKEN_KEY);
-    } catch {
-        return null;
-    }
-}
-
-export default function authFetch(
+export default async function authFetch(
     url: string,
     options: RequestInit = {}
 ): Promise<Response> {
@@ -41,5 +33,11 @@ export default function authFetch(
         }
     }
 
-    return fetch(url, { ...options, headers });
+    const res = await fetch(url, { ...options, headers });
+
+    if (res.status === 401 && token) {
+        clearToken(); // AuthProvider picks this up and clears the session
+    }
+
+    return res;
 }
