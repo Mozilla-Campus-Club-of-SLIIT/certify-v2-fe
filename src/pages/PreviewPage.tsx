@@ -1,17 +1,9 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-
-const PDFViewer = dynamic(() => import("../components/PDFViewer"), {
-  ssr: false,
-});
+import { useParams, Link } from "react-router-dom";
+import PDFViewer from "../components/PDFViewer";
 
 function PreviewPage() {
-  const params = useParams();
-  const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
+  const { id } = useParams();
   const certificateId = id || "Not provided";
   const [certificateBlob, setCertificateBlob] = useState<Blob>();
   const [certificateImg, setCertificateImg] = useState<string>("");
@@ -27,9 +19,8 @@ function PreviewPage() {
         setLoading(true);
         setError("");
 
-        const backendApi = process.env.NEXT_PUBLIC_BACKEND_API || "";
         const response = await fetch(
-          `${backendApi}/certificate/${encodeURIComponent(certificateId)}/preview`,
+          `${import.meta.env.VITE_PUBLIC_BACKEND_API}/certificate/${encodeURIComponent(certificateId)}/preview`,
           { signal: controller.signal },
         );
 
@@ -93,7 +84,7 @@ function PreviewPage() {
           {/* Back link */}
           <Link
             id="back-to-home-link"
-            href="/"
+            to="/"
             className="btn-ghost"
           >
             ← Back
