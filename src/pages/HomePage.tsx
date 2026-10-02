@@ -1,94 +1,59 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-function HomePage() {
-  const [certificateId, setCertificateId] = useState("");
+export default function HomePage() {
+  const [certId, setCertId] = useState("");
   const navigate = useNavigate();
 
-  const handleVerifyClick = () => {
-    const trimmedId = certificateId.trim();
-    if (!trimmedId) return;
-    navigate(`/certificates/${encodeURIComponent(trimmedId)}`);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleVerifyClick();
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = certId.trim();
+    if (!t) return;
+    navigate(`/certificates/${encodeURIComponent(t)}`);
   };
 
   return (
-    <section
-      className="flex-1 flex items-center justify-center px-6 py-12 bg-[#f7f7fa]"
-      style={{
-        background:
-          "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(89,42,203,0.07) 0%, transparent 65%), #f7f7fa",
-      }}
-    >
-      <div className="w-full max-w-md text-center">
-        {/* Heading */}
-        <h1
-          className="font-extrabold leading-[1.1] tracking-[-0.03em] text-moz-black mb-3"
-          style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.75rem)" }}
+    <div className="flex-1 flex flex-col items-center justify-center bg-[#FAFAFA] px-3 py-12 sm:py-18 font-['Poppins',system-ui,sans-serif]">
+      <h1 className="m-0 text-center font-semibold text-[clamp(30px,5.4vw,84px)] leading-[1.12] tracking-[-0.01em]">
+        <span className="block text-[#F06A1D]">Your Achievements.</span>
+        <span className="block text-[#0B0B14]">Officially Certified.</span>
+      </h1>
+
+      <p className="m-0 mt-6 sm:mt-9 text-center font-light text-[clamp(14px,1.725vw,27px)] text-[#6D6D6D]">
+        Get your certificates in one place.
+      </p>
+
+      <form
+        onSubmit={handleVerify}
+        className="w-full flex flex-col items-center mt-9 sm:mt-[75px]"
+      >
+        <label htmlFor="credential-id-input" className="sr-only">
+          Certificate ID
+        </label>
+        <input
+          id="credential-id-input"
+          type="text"
+          placeholder="Certificate ID"
+          value={certId}
+          onChange={(e) => setCertId(e.target.value)}
+          className="w-full max-w-[578px] h-[42px] sm:h-[50px] px-6 rounded-[4px] border border-[#C4C4C4] bg-white text-[#1E1E1E] text-[14px] sm:text-[16px] font-light outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#F47624] focus:shadow-[0_0_0_3px_rgba(244,118,36,0.12)] placeholder:text-[#B3B3B3]"
+        />
+
+        <button
+          id="verify-credential-button"
+          type="submit"
+          className="mt-7.5 sm:mt-[39px] h-[42px] sm:h-[51px] px-7.5 sm:px-[34px] rounded-[3px] border-none bg-[#F47624] text-white text-[15px] sm:text-[21px] font-medium cursor-pointer transition-colors hover:bg-[#E36614]"
         >
-          Verify Your{" "}
-          <span className="text-moz-orange">Certificate</span>
-        </h1>
+          Verify Your Certificate
+        </button>
+      </form>
 
-        {/* Sub-text */}
-        <p className="text-sm text-moz-gray-mid mx-auto mb-6 max-w-sm leading-[1.5]">
-          Enter the unique certificate ID to instantly verify an official
-          credential issued by&nbsp;
-          <a
-            href="https://sliitmozilla.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-moz-violet font-semibold no-underline"
-          >
-            SLIIT Mozilla Club
-          </a>
-          .
-        </p>
-
-        {/* Card */}
-        <div
-          className="bg-white border border-moz-gray-light rounded-2xl p-6"
-          style={{
-            boxShadow:
-              "0 4px 6px rgba(0,0,0,0.04), 0 12px 40px rgba(89,42,203,0.06)",
-          }}
-        >
-          <label
-            htmlFor="certificate-id-input"
-            className="block text-[0.7rem] font-bold text-moz-gray-dark text-left mb-[0.4rem] tracking-[0.05em] uppercase"
-          >
-            Certificate ID
-          </label>
-
-          <input
-            id="certificate-id-input"
-            type="text"
-            placeholder="e.g. A3F8C20B91D4"
-            value={certificateId}
-            onChange={(e) => setCertificateId(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="input-base"
-          />
-
-          <button
-            id="verify-button"
-            onClick={handleVerifyClick}
-            className="btn-primary mt-3"
-          >
-            Verify Certificate →
-          </button>
-        </div>
-
-        {/* Subtle hint */}
-        <p className="mt-4 text-[0.7rem] text-moz-gray-mid">
-          Find your certificate ID in the email you received from us.
-        </p>
-      </div>
-    </section>
+      <Link
+        to="/badges/verify"
+        className="mt-4.5 text-[12px] text-[#8C8C8C] no-underline transition-colors hover:text-[#F47624]"
+      >
+        Have a badge ID? Verify a badge
+      </Link>
+    </div>
   );
 }
-
-export default HomePage;

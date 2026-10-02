@@ -12,15 +12,16 @@ import { useEffect, useState } from "react"
  * 7) Jumping Fox (bottom-right, normal)
  * 8) Blank (3s delay)
  */
-const scenes = [
-  { type: "running-fox", direction: "rtl", duration: 6000 },
-  { type: "none", duration: 3000 },
+type Scene =
+  | { type: "running-fox"; direction: "rtl" | "ltr"; duration: number }
+  | { type: "jumping-fox"; position: "left" | "right"; duration: number }
+  | { type: "none"; duration: number };
+
+const scenes: Scene[] = [
   { type: "jumping-fox", position: "left", duration: 8000 },
-  { type: "none", duration: 3000 },
-  { type: "running-fox", direction: "ltr", duration: 6000 },
-  { type: "none", duration: 3000 },
+  { type: "none", duration: 15000 }, /* long pause between jumps */
   { type: "jumping-fox", position: "right", duration: 8000 },
-  { type: "none", duration: 3000 },
+  { type: "none", duration: 15000 },
 ]
 
 export function FoxAnimations() {

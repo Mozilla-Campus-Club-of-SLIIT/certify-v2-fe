@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import PDFViewer from "../components/PDFViewer";
 
 function PreviewPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const certificateId = id || "Not provided";
   const [certificateBlob, setCertificateBlob] = useState<Blob>();
   const [certificateImg, setCertificateImg] = useState<string>("");
@@ -25,11 +27,12 @@ function PreviewPage() {
         );
 
         if (!response.ok) {
-          setError("Failed to fetch certificate preview");
+          setError("Certificate not found. Please check the ID and try again.");
           return;
         }
 
-        const blob = await response.blob();
+        const rawBlob = await response.blob();
+        const blob = new Blob([rawBlob], { type: "application/pdf" });
         objectUrl = URL.createObjectURL(blob);
         setCertificateImg(objectUrl);
         setCertificateBlob(blob);
@@ -37,7 +40,9 @@ function PreviewPage() {
         if (fetchError instanceof Error && fetchError.name === "AbortError") {
           return;
         }
-        setError("Error fetching certificate preview");
+        setError(
+          `Error fetching certificate: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`
+        );
       } finally {
         setLoading(false);
       }
@@ -47,15 +52,12 @@ function PreviewPage() {
 
     return () => {
       controller.abort();
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [certificateId]);
 
   const handleDownload = () => {
     if (!certificateBlob) return;
-
     const fileUrl = URL.createObjectURL(certificateBlob);
     const link = document.createElement("a");
     link.href = fileUrl;
@@ -65,93 +67,50 @@ function PreviewPage() {
   };
 
   return (
-    <div className="admin-page">
-      {/* Top bar */}
-      <div className="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1
-            className="m-0 font-bold text-moz-black tracking-[-0.02em]"
-            style={{ fontSize: "clamp(1.1rem, 3vw, 1.5rem)" }}
-          >
-            Certificate Preview
-          </h1>
-          <p className="mt-1 text-[0.8rem] text-moz-gray-mid font-mono">
-            ID: {certificateId}
-          </p>
-        </div>
+    <section className="flex-1 bg-[#FAFAFA] flex flex-col items-center px-3 pt-7.5 sm:pt-[52px] pb-9 sm:pb-[48px] font-['Poppins',system-ui,sans-serif]">
+      <h1 className="m-0 font-semibold text-[24px] sm:text-[45px] leading-[1.2] text-black text-center">
+        Certificate Preview
+      </h1>
 
-        <div className="flex gap-[0.625rem] flex-wrap">
-          {/* Back link */}
-          <Link
-            id="back-to-home-link"
-            to="/"
-            className="btn-ghost"
-          >
-            ← Back
-          </Link>
-
-          {/* Download button */}
-          <button
-            id="download-certificate-button"
-            onClick={handleDownload}
-            disabled={!certificateBlob}
-            className={`py-2 px-5 rounded-lg border-none text-[0.85rem] font-bold font-sans transition-all duration-200 ${certificateBlob
-                ? "text-white cursor-pointer"
-                : "text-moz-gray bg-moz-gray-light cursor-not-allowed"
-              }`}
-            style={
-              certificateBlob
-                ? {
-                  background:
-                    "linear-gradient(135deg, var(--color-moz-orange) 0%, var(--color-moz-orange-mid) 100%)",
-                  boxShadow: "0 2px 10px rgba(255,113,57,0.3)",
-                }
-                : undefined
-            }
-          >
-            ↓ Download PDF
-          </button>
-        </div>
-      </div>
-
-      {/* Status messages */}
-      {loading && (
-        <div className="max-w-7xl mx-auto w-full">
-          <p className="text-center text-moz-gray-mid text-[0.9rem] p-8">
-            <span className="inline-block animate-spin">⟳</span>{" "}
+      <div className="w-full max-w-[675px] mt-6 sm:mt-[52px] flex flex-col items-center">
+        {loading && (
+          <div className="flex items-center gap-2.25 py-12 text-[#6D6D6D] text-[14px]">
+            <Loader2 className="w-3.75 h-3.75 animate-spin text-[#F47624]" />
             Loading certificate…
-          </p>
-        </div>
-      )}
+          </div>
+        )}
 
-      {error && (
-        <div className="max-w-7xl mx-auto w-full">
-          <p
-            className="text-center text-[0.9rem] p-6 rounded-xl border"
-            style={{
-              color: "#c0392b",
-              background: "#fdf0ef",
-              borderColor: "#f5c6c2",
-            }}
-          >
-            ⚠ {error}
-          </p>
-        </div>
-      )}
+        {error && !loading && (
+          <div className="flex flex-col items-center gap-4.5 py-7.5 text-center">
+            <p className="m-0 py-3 px-4.5 bg-[#FDF0EF] text-[#C0392B] rounded-[4px] border border-[#F5C6C2] text-[12px]">
+              {error}
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="h-[36px] px-6 rounded-[3px] border-none bg-[#F47624] text-white text-[14px] font-medium cursor-pointer transition-colors hover:bg-[#E36614]"
+            >
+              Try another ID
+            </button>
+          </div>
+        )}
 
-      {/* PDF viewer */}
-      {certificateImg && !loading && !error && (
-        <div
-          className="flex-1 max-w-7xl mx-auto w-full min-h-0 rounded-2xl overflow-hidden border border-moz-gray-light bg-white p-2"
-          style={{
-            boxShadow:
-              "0 4px 6px rgba(0,0,0,0.04), 0 12px 40px rgba(89,42,203,0.06)",
-          }}
-        >
-          <PDFViewer url={certificateImg} />
-        </div>
-      )}
-    </div>
+        {certificateImg && !loading && !error && (
+          <>
+            <div className="w-full h-[min(46.5vw,450px)] min-h-[165px]">
+              <PDFViewer url={certificateImg} />
+            </div>
+
+            <button
+              id="download-certificate-button"
+              onClick={handleDownload}
+              className="mt-7.5 sm:mt-[63px] w-full max-w-[315px] h-[42px] sm:h-[51px] rounded-[3px] border-none bg-[#F47624] text-white text-[15px] sm:text-[21px] font-medium cursor-pointer transition-colors hover:bg-[#E36614] active:scale-[0.99]"
+            >
+              Download as PDF
+            </button>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 

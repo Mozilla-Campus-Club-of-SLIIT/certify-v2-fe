@@ -16,8 +16,6 @@ interface FormData {
   issue_reason: string;
   event_name: string;
   event_date: string;
-  event_location: string;
-  course_name: string;
   issuer_name: string;
   notes: string;
 }
@@ -29,8 +27,6 @@ const EMPTY_FORM: FormData = {
   issue_reason: "",
   event_name: "",
   event_date: "",
-  event_location: "",
-  course_name: "",
   issuer_name: "",
   notes: "",
 };
@@ -54,7 +50,7 @@ function Field({
 const inputTailwind =
   "w-full h-[34px] bg-[#F5F5F5] rounded-[6px] border-none px-3 font-['Poppins',system-ui,sans-serif] text-[12px] outline-none text-[#1E1E1E] placeholder:text-[#A6A6A6] focus:ring-2 focus:ring-[#F47624] transition-all";
 
-export default function IssueCertificatePage() {
+export default function IssueBadgePage() {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
@@ -69,19 +65,15 @@ export default function IssueCertificatePage() {
       try {
         setTemplatesLoading(true);
         const res = await authFetch(
-          `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/templates`,
+          `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/badge-templates`,
         );
-        if (!res.ok) throw new Error("Could not load templates");
-        const data = (await res.json()) as
-          | Template[]
-          | { templates?: Template[]; data?: Template[] };
-        const list = Array.isArray(data)
-          ? data
-          : data.templates ?? data.data ?? [];
+        if (!res.ok) throw new Error("Could not load badge templates");
+        const data = (await res.json()) as { badge_templates?: Template[] };
+        const list = data.badge_templates ?? [];
         setTemplates(list);
       } catch {
         setTemplatesError(
-          "Could not load templates - enter template ID manually.",
+          "Could not load badge templates - enter template ID manually.",
         );
       } finally {
         setTemplatesLoading(false);
@@ -126,8 +118,6 @@ export default function IssueCertificatePage() {
           "issue_reason",
           "event_name",
           "event_date",
-          "event_location",
-          "course_name",
           "issuer_name",
           "notes",
         ] as const
@@ -136,7 +126,7 @@ export default function IssueCertificatePage() {
       });
 
       const res = await authFetch(
-        `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/add/certificate`,
+        `${import.meta.env.VITE_PUBLIC_BACKEND_API}/admin/add/badge`,
         {
           method: "POST",
           body: JSON.stringify(payload),
@@ -145,25 +135,22 @@ export default function IssueCertificatePage() {
 
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as {
+          detail?: string;
           message?: string;
         };
-        throw new Error(err.message ?? `Server error ${res.status}`);
+        throw new Error(err.detail ?? err.message ?? `Server error ${res.status}`);
       }
 
       const result = (await res.json()) as {
-        certificate_id?: string;
-        certificate?: { certificate_id?: string };
-        data?: { certificate_id?: string };
+        badge?: { badge_id?: string; id?: number };
       };
-      const certId =
-        result.certificate_id ??
-        result.certificate?.certificate_id ??
-        result.data?.certificate_id ??
-        null;
+      const badgeId =
+        result.badge?.badge_id ??
+        (result.badge?.id ? String(result.badge.id) : null);
 
-      if (!certId) throw new Error("No certificate ID returned by the server.");
+      if (!badgeId) throw new Error("No badge ID returned by the server.");
 
-      setIssuedId(certId);
+      setIssuedId(badgeId);
       setForm(EMPTY_FORM);
     } catch (err) {
       setSubmitError(
@@ -185,16 +172,16 @@ export default function IssueCertificatePage() {
           </div>
 
           <h2 className="m-0 mb-1.5 text-xl font-bold font-['Poppins',system-ui,sans-serif] text-black">
-            Certificate Issued!
+            Badge Issued!
           </h2>
           <p className="text-[#6D6D6D] font-['Poppins',system-ui,sans-serif] text-sm mb-4.5">
-            The certificate has been created successfully.
+            The badge has been created successfully.
           </p>
 
           {/* ID chip */}
           <div className="bg-[#F7F7F7] rounded-[8px] py-2.25 px-3 mb-4.5">
             <p className="m-0 text-[12px] text-[#1E1E1E] font-medium font-['Poppins',system-ui,sans-serif] uppercase tracking-[0.06em]">
-              Certificate ID
+              Badge ID
             </p>
             <p className="mt-0.75 font-mono text-base font-bold text-black break-all">
               {issuedId}
@@ -204,14 +191,15 @@ export default function IssueCertificatePage() {
           {/* Actions */}
           <div className="flex gap-2.25 flex-col">
             <Link
-              id="view-certificate-link"
-              to={`/certificates/${encodeURIComponent(issuedId)}`}
+              id="view-badge-link"
+              to="/badges/verify"
+              state={{ badgeId: issuedId }}
               className="block py-2.25 rounded-lg text-white font-bold no-underline text-[13px] bg-[#F47624] font-['Poppins',system-ui,sans-serif] shadow-[0_4px_14px_rgba(244,118,36,0.2)]"
             >
-              View Certificate →
+              Verify Badge →
             </Link>
             <button
-              id="issue-another-button"
+              id="issue-another-badge-button"
               onClick={() => setIssuedId(null)}
               className="py-2.25 rounded-lg border-none bg-transparent text-[#0F172A] font-semibold cursor-pointer text-[13px] font-['Poppins',system-ui,sans-serif]"
             >
@@ -235,17 +223,17 @@ export default function IssueCertificatePage() {
     <div className="flex-1 bg-[#FAFAFA] px-3 py-7.5 sm:py-[42px] flex flex-col items-center">
       {/* Page header */}
       <h1 className="m-0 mb-6 sm:mb-[38px] font-['Poppins',system-ui,sans-serif] font-semibold text-[24px] sm:text-[38px] leading-[1.2] text-black text-center">
-        Issue Certificate
+        Issue Badge
       </h1>
 
       {/* Main card */}
       <div className="bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded-[15px] w-full max-w-[526px] px-4.5 py-6 sm:px-[38px] sm:pt-[30px] sm:pb-[15px] mb-6">
         <h2 className="m-0 mb-4.5 font-['Poppins',system-ui,sans-serif] font-semibold text-[18px] text-[#0F172A]">
-          Certificate Details
+          Badge Details
         </h2>
 
         <form
-          id="issue-certificate-form"
+          id="issue-badge-form"
           onSubmit={handleSubmit}
           noValidate
           className="flex flex-col gap-3.75"
@@ -358,28 +346,6 @@ export default function IssueCertificatePage() {
               />
             </Field>
 
-            <Field label="Event Location">
-              <input
-                id="event-location-input"
-                type="text"
-                placeholder="Location"
-                value={form.event_location}
-                onChange={set("event_location")}
-                className={inputTailwind}
-              />
-            </Field>
-
-            <Field label="Course Name">
-              <input
-                id="course-name-input"
-                type="text"
-                placeholder="Course"
-                value={form.course_name}
-                onChange={set("course_name")}
-                className={inputTailwind}
-              />
-            </Field>
-
             <Field label="Issuer Name" required>
               <input
                 id="issuer-name-input"
@@ -422,7 +388,7 @@ export default function IssueCertificatePage() {
               Cancel
             </button>
             <button
-              id="submit-certificate-button"
+              id="submit-badge-button"
               type="submit"
               disabled={isDisabled}
               className={`w-full sm:w-auto font-['Poppins',system-ui,sans-serif] font-normal text-[14px] sm:text-[15px] px-6 py-1.5 sm:py-[8px] rounded-[4px] border-none transition-all duration-200 ${isDisabled
@@ -430,7 +396,7 @@ export default function IssueCertificatePage() {
                 : "bg-[#F47624] text-white cursor-pointer hover:bg-[#E36614] active:scale-[0.98] shadow-[0_2px_10px_rgba(244,118,36,0.3)]"
                 }`}
             >
-              {submitting ? "Issuing…" : "Issue Certificate"}
+              {submitting ? "Issuing…" : "Issue Badge"}
             </button>
           </div>
         </form>
